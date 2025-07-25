@@ -126,10 +126,13 @@ class DataPublisher(Node):
             self.get_logger().error(f"CARLA-related error: {e}", exc_info=True)
 
 
-def main(args=None):
+def main(args=None) -> None:
+    """Initializes the ROS 2 node and starts the data publisher.
+
+    Args:
+        args (Str, optional): _description_. Defaults to None.
     """
-    Main function that initializes and runs the ROS 2 node.
-    """
+
     rclpy.init(args=args)
     # Change the actor_ego parameter to select a different vehicle
     node = DataPublisher(actor_ego="vehicle.tesla.model3")
