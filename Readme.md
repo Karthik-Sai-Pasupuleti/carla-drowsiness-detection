@@ -1,4 +1,17 @@
+# Contribution Guidelines (Please read these guidelines)
 
+To keep this repository clean, stable, and easy to navigate, please follow these instructions before pushing any code:
+
+### What to Do:
+- **Only push code that is finalized and working.**
+- **Organize your code** into the appropriate folders (`src/data_collection`, `src/data_preprocessing/`, `src/feature_extraction/`, etc.).
+- **Add a module-level docstring at the top of each Python file to explain its purpose.**
+
+### What to Avoid:
+- Do **not** push experimental, incomplete, or temporary files.
+- Avoid cluttering the main repository with unstructured code.
+
+---
 
 # Drowsiness Detection System
 
@@ -57,3 +70,5 @@ drowsiness-detection/
 ```
 
 ---
+
+
