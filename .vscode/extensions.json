@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "njpwerner.autodocstring", // AutoDocstring for Python
+        "ms-python.python", // Python extension
+        "ms-python.pylint", // Pylint linter integration
+        "ms-toolsai.jupyter", // Jupyter notebook support
+        "ms-azuretools.vscode-docker", // Docker support
+        "ms-python.black-formatter", // Black formatter for Python
+    ],
+    "unwantedRecommendations": []
+}

@@ -1,0 +1,142 @@
+# ROS2-Humble: Data Publisher Script
+#!/usr/bin/env python3
+
+"""
+ROS 2 Node: data_publisher.py
+
+This script connects to the CARLA simulator and collects live vehicle telemetry data
+including steering angle and lateral offset from the lane center. The data is processed
+to identify the vehicle's directional deviation (left, right, or center) and is published
+at 20 Hz. The data is also logged in JSON format to support driver drowsiness detection
+via downstream feature extraction.
+"""
+
+
+import os
+import math
+import json
+import random
+
+import rclpy
+from rclpy.node import Node
+import carla
+
+
+# pylint: disable=too-few-public-methods
+class DataPublisher(Node):
+    """
+    ROS 2 Node that interfaces with CARLA to extract and log steering and lane deviation
+    data.
+    """
+
+    def __init__(self, actor_ego: str = "vehicle.tesla.model3"):
+        super().__init__("data_publisher")
+        self.get_logger().info("Initializing Data Publisher...")
+        # Connect to CARLA simulator server
+        client = carla.Client("localhost", 2000)
+        client.set_timeout(10.0)
+        world = client.get_world()
+        bp_lib = world.get_blueprint_library()
+
+        # Select the desired vehicle from the CARLA blueprint library. Find the actors in
+        # the following link: https://carla.readthedocs.io/en/latest/catalogue_vehicles/
+
+        # vehicle name from catalogue
+        self.get_logger().info(f"Searching for vehicle blueprint: '{actor_ego}'")
+
+        # Try to find the blueprint
+        self.vehicle_bp = bp_lib.find(actor_ego)
+
+        # If not found, select a random vehicle
+        if self.vehicle_bp is None:
+            self.get_logger().warn(
+                f"Vehicle blueprint '{actor_ego}' not found. Selecting a random vehicle."
+            )
+
+            # Filter for 4-wheeled vehicles that are not trucks,motorcycles,bikes,or buses
+            cars = [
+                bp
+                for bp in world.get_blueprint_library().filter("vehicle.*.*")
+                if all(x not in bp.id for x in ["bike", "cycle", "truck", "bus"])
+            ]
+
+            # Randomly select a car blueprint
+            self.vehicle_bp = random.choice(cars)
+
+        # Retrieve the road map
+        self.map = world.get_map()
+
+        # Prepare for JSON logging
+        self.data_log = []
+        self.json_file_path = os.path.expanduser("/dataset/carla_data_log.json")
+
+        # Set timer to publish data every 0.05 seconds (20 Hz)
+        self.create_timer(0.05, self.publisher_callback)
+
+    def publisher_callback(self):
+        """Callback function that collects vehicle data, calculates lateral offset,
+        infers driving direction, and logs the results to JSON.
+        """
+        try:
+            # Get current vehicle location and steering angle
+            transform = self.vehicle_bp.get_transform()
+            vehicle_location = transform.location
+
+            control = self.vehicle.get_control()
+            steering_angle = control.steer  # Range: -1.0 (left) to +1.0 (right)
+
+            # Get lane center from CARLA waypoint API
+            waypoint = self.map.get_waypoint(vehicle_location, project_to_road=True)
+            lane_pos = waypoint.transform.location
+
+            # Calculate Euclidean distance between vehicle and lane center
+            dx = vehicle_location.x - lane_pos.x
+            dy = vehicle_location.y - lane_pos.y
+            lateral_offset = math.sqrt(dx**2 + dy**2)
+
+            # Determine side (left/right/center) and apply sign
+            if dx < -0.1:
+                lateral_offset *= -1
+                direction = "left"
+            elif dx > 0.1:
+                direction = "right"
+            else:
+                lateral_offset = 0.0
+                direction = "center"
+
+            # Create data dictionary
+            log_entry = {
+                "steering_angle": round(steering_angle, 3),
+                "lateral_offset_m": round(lateral_offset, 3),
+                "direction": direction,
+            }
+
+            # Print to console
+            self.get_logger().info(str(log_entry))
+
+            # Append to in-memory log
+            self.data_log.append(log_entry)
+
+            # Write to JSON file every 10 entries
+            if len(self.data_log) % 10 == 0:
+                with open(self.json_file_path, "w", encoding="utf-8") as f:
+                    json.dump(self.data_log, f, indent=2)
+
+        except (AttributeError, RuntimeError, carla.libcarla.Error) as e:
+            self.get_logger().error(f"CARLA-related error: {e}", exc_info=True)
+
+
+def main(args=None):
+    """
+    Main function that initializes and runs the ROS 2 node.
+    """
+    rclpy.init(args=args)
+    # Change the actor_ego parameter to select a different vehicle
+    node = DataPublisher(actor_ego="vehicle.tesla.model3")
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
