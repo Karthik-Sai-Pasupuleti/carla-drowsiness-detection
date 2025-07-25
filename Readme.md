@@ -1,82 +1,59 @@
-# Python Project Template
 
-A modern Python project template with built-in support for code quality tools and VS Code integration.
 
-## Features
+# Drowsiness Detection System
 
-- 🐍 Python development environment
-- ✨ Code formatting with Black
-- 🔍 Linting with Pylint
-- 📝 VS Code integration with recommended extensions
-- 🐋 Optional Docker support
-- 📓 Optional Jupyter Notebook support
+This project aims to detect driver drowsiness using data from a camera and the CARLA simulator. It leverages deep neural networks (DNNs) for feature extraction and a large language model (LLM) to interpret the outputs and control in-car systems like AC, speakers, and tactile feedback on the steering wheel.
 
-## Prerequisites
+---
 
-- Python 3.x
-- Visual Studio Code
-- Git
+##  Getting Started
 
-## Getting Started
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/your-username/drowsiness-detection.git
+   cd drowsiness-detection
+   ```
 
-1. Clone this template repository
-2. Create and activate a virtual environment:
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
-```
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+2. **Create and activate a virtual environment**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
 
-## VS Code Extensions
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-This template comes with recommended VS Code extensions for Python development:
+---
 
-- Python (ms-python.python)
-- Pylint (ms-python.pylint)
-- Black Formatter (ms-python.black-formatter)
-- AutoDocstring (njpwerner.autodocstring)
-- Jupyter (ms-toolsai.jupyter) - Optional
-- Docker (ms-azuretools.vscode-docker) - Optional
-
-The extensions will be automatically suggested when you open the project in VS Code.
-
-## Code Quality Tools
-
-### Formatting
-
-- Black formatter with a line length of 90 characters
-- Automatic format on save
-- Visual ruler at 90 characters
-
-### Linting
-
-- Pylint integration
-- Customized line length to match Black formatter
-- Automatic lint on save
-
-## Project Structure
+##  Project Structure
 
 ```
-├── .vscode/                # VS Code configuration
-├── src/                    # Source code
-├── .gitignore             # Git ignore rules
-├── requirements.txt        # Python dependencies
-└── README.md              # Project documentation
+drowsiness-detection/
+│
+├── .vscode/                   # VSCode settings and configurations
+├── src/                       # Source code
+│   ├── data_collection/       # Scripts to collect data from camera and CARLA
+│   ├── preprocessing/         # Data cleaning, normalization, and augmentation
+│   ├── feature_extraction/    # DNN pipelines for feature extraction
+│   │   ├── camera_pipeline/   # Camera-based feature extraction
+│   │   └── carla_pipeline/    # CARLA simulator-based feature extraction
+│   ├── llm_response/          # LLM logic to interpret DNN outputs
+│   ├── control_module/        # AC, speaker, and tactile feedback control
+│   └── utils/                 # Shared utility functions
+│
+├── models/                    # Trained or pre-trained models
+│   ├── camera_model/
+│   └── carla_model/
+│
+├── data/                      # Dataset storage
+│
+├── notebooks/                 # Jupyter notebooks for experiments and visualization
+│
+├── README.md                  # Project overview and setup guide
+├── requirements.txt           # Python dependencies
+├── .gitignore                 # Files and folders to ignore in Git
 ```
 
-## Development Settings
-
-The template includes optimized VS Code settings for Python development:
-
-- Auto-save on focus change
-- Integrated terminal configuration
-- Git integration
-- Code navigation features
-- Syntax highlighting
-- IntelliSense and auto-completion
-- Debug configuration
-
-
+---
