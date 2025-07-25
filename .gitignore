@@ -1,4 +1,3 @@
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -7,41 +6,16 @@ __pycache__/
 # Virtual environment
 .venv/
 
-# VS Code settings
-
 # Distribution / packaging
 build/
 dist/
 *.egg-info/
 
-# PyInstaller
-*.spec
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# MyPy
+# Type checker caches
 .mypy_cache/
-
-# Pyre type checker
-.pyre/
-
-# Pytype
 .pytype/
-
-
-# Custom exclusions
-carla_simulators/
-.pylintrc
+.pyre/
 
