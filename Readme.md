@@ -2,7 +2,7 @@
 
 # Drowsiness Detection System
 
-This project aims to detect driver drowsiness using data from a camera and the CARLA simulator. It leverages deep neural networks (DNNs) for feature extraction and a large language model (LLM) to interpret the outputs and control in-car systems like AC, speakers, and tactile feedback on the steering wheel.
+This project aims to detect driver drowsiness using data from a camera and the CARLA simulator. It leverages deep neural networks (DNNs) for feature extraction and a large language model (LLM) to interpret the outputs and control in-car systems like Fan, speakers, and tactile feedback on the steering wheel.
 
 ---
 
@@ -35,12 +35,12 @@ drowsiness-detection/
 ├── .vscode/                   # VSCode settings and configurations
 ├── src/                       # Source code
 │   ├── data_collection/       # Scripts to collect data from camera and CARLA
-│   ├── preprocessing/         # Data cleaning, normalization, and augmentation
+│   ├── preprocessing/         # Data cleaning, normalization, and augmentation, sensor data association
 │   ├── feature_extraction/    # DNN pipelines for feature extraction
 │   │   ├── camera_pipeline/   # Camera-based feature extraction
 │   │   └── carla_pipeline/    # CARLA simulator-based feature extraction
 │   ├── llm_response/          # LLM logic to interpret DNN outputs
-│   ├── control_module/        # AC, speaker, and tactile feedback control
+│   ├── control_module/        # Fan, speaker, and tactile feedback control
 │   └── utils/                 # Shared utility functions
 │
 ├── models/                    # Trained or pre-trained models
