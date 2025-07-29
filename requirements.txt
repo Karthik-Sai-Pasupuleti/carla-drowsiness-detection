@@ -1,2 +1,6 @@
 pylint
 black
+dlib
+transformers==4.37.2
+torch==2.3.1
+Pillow
