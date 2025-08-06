@@ -166,7 +166,7 @@ class EyeFeatureExtractor:
 
 
 class MouthFeatureExtractor:
-    """Class for extracting Mouth Aspect Ratio (MAR)."""
+    """Class for extracting features from Mouth Aspect Ratio (MAR)."""
 
     def __init__(self, fps: float):
         """
@@ -258,7 +258,7 @@ class MouthFeatureExtractor:
 
 
 class CameraBasedFeatureExtractor:
-    """Unified class for extracting drowsiness-related features from camera feed."""
+    """class for extracting drowsiness-related features from camera feed."""
 
     def __init__(self, fps: float):
         self.fps = fps
@@ -316,6 +316,8 @@ class CameraBasedFeatureExtractor:
         }
 
 def main():
+    """main function to inference the facial drowsiness features (eye blink frequency, PERCLOS, yawning frequency) from the image.
+    """
     cap = cv2.VideoCapture(0)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if fps == 0:

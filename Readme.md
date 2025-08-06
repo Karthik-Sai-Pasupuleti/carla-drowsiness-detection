@@ -71,4 +71,6 @@ drowsiness-detection/
 
 ---
 
+## References
 
+Mediapipe facial landmarks documentation: https://github.com/tensorflow/tfjs-models/blob/838611c02f51159afdd77469ce67f0e26b7bbb23/face-landmarks-detection/src/mediapipe-facemesh/keypoints.ts
