@@ -315,9 +315,9 @@ class CameraBasedFeatureExtractor:
             "blinks": self.eye.ear_stats["blinks"],
         }
 
+
 def main():
-    """main function to inference the facial drowsiness features (eye blink frequency, PERCLOS, yawning frequency) from the image.
-    """
+    """main function to inference the facial drowsiness features (eye blink frequency, PERCLOS, yawning frequency) from the image."""
     cap = cv2.VideoCapture(0)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if fps == 0:
