@@ -125,3 +125,21 @@ def steering_reversal_rate(filtered_theta: np.array, theta_min: float) -> int:
     total_reversals = nr_up + nr_down
 
     return total_reversals
+
+
+# === LANE POSITION ===
+
+
+def lane_position_std_dev(deviations: np.array) -> float:
+    """Calculate the standard deviation of lane position deviations.
+
+    Args:
+        deviations (np.array): Array of lane position deviations from the lane center.
+
+    Returns:
+        float: Standard deviation of the deviations.
+    """
+
+    deviations = np.array(deviations)
+    std_dev = np.std(deviations, ddof=0)  # population standard deviation
+    return std_dev
