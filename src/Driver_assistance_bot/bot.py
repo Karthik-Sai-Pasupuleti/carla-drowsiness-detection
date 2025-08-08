@@ -3,73 +3,93 @@ blink frequency, PERCLOS, Yawning frequency and alert the driver if he/she gets 
 """
 
 from typing import List, Literal, Optional
+import toml
 from pydantic import BaseModel, Field, StrictFloat
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama.llms import OllamaLLM
 
 
 class Input(BaseModel):
-    """Input data model for the driver drowsiness detection system.
+    """
+    Input data model for the driver drowsiness detection system.
+
     Args:
         BaseModel (pydantic.BaseModel): Provides data validation and parsing.
     """
 
-    eye_blink_frequency: Optional[StrictFloat] = Field(
-        default=None,
-        description="Number of eye blinks per minute, detected from video.",
-    )
     perclos: Optional[StrictFloat] = Field(
         default=None,
         description="Percentage of time eyes are closed, used to measure drowsiness.",
     )
-    yawning_frequency: Optional[StrictFloat] = Field(
+    blink_rate: Optional[StrictFloat] = Field(
+        default=None,
+        description="Number of eye blinks per minute, detected from video.",
+    )
+    yawn_freq: Optional[StrictFloat] = Field(
         default=None, description="Number of yawns per minute, detected from video."
+    )
+    sdlp: Optional[StrictFloat] = Field(
+        default=None, description="Standard deviation of lane position in meters."
+    )
+    steering_entropy: Optional[StrictFloat] = Field(
+        default=None, description="Unpredictability measure of steering movements."
+    )
+    steering_reversal_rate: Optional[StrictFloat] = Field(
+        default=None,
+        description="Number of significant steering direction changes per minute.",
     )
 
 
 class Output(BaseModel):
-    """Output data model for the driver drowsiness detection system.
+    """
+    Output data model for the driver drowsiness detection system.
+
     Args:
         BaseModel (pydantic.BaseModel): Provides data validation and parsing.
     """
 
-    message: Optional[str] = Field(
-        default=None,
-        description="Optional text response from the model about the driver's condition or "
-        "recommended actions.",
+    drowsiness_level: Literal["low", "medium", "high"] = Field(
+        description="Detected drowsiness risk level."
     )
-    actions: Optional[List[Literal["fan", "speaker", "vibration"]]] = Field(
-        default=None,
-        description="List of actions to activate: 'fan' to alert the driver by blowing "
-        "cool air, 'speaker' to alert, 'vibration' to warn via steering.",
+    reasoning: str = Field(
+        description="Brief explanation based on input metrics that led to the decision."
+    )
+    actions: List[Literal["speaker", "fan", "steering_vibration"]] = Field(
+        description="List of actions to trigger in response to detected drowsiness."
     )
 
 
 class Bot:
-    """bot"""
+    """Driver drowsiness detection bot"""
 
     def __init__(self):
-        """_summary_"""
         self.llm = OllamaLLM(model="gpt-oss:20b")
-        # update the template by creating a prompt toml file
-        self.prompt = ChatPromptTemplate(
+
+        # Load prompts from TOML
+        prompts = toml.load("prompts.toml")
+        system_prompt = prompts["SYSTEM"]
+        user_prompt = prompts["USER"]
+
+        self.prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", "You are a helpful AI bot. Your name is {name}."),
-                ("human", "Hello, how are you doing?"),
-                ("ai", "I'm doing well, thanks!"),
-                ("human", "{user_input}"),
+                ("system", system_prompt),
+                ("user", user_prompt),
             ]
         )
 
     def invoke(self, input_data: Input) -> Output:
-        """Invoke the llm
+        """
+        Invoke the LLM
         Args:
-            input_data (Input): facial features
+            input_data (Input): Driver monitoring and vehicle metrics
         Returns:
-            Output: llm responce and actions
+            Output: LLM response parsed into Output model
         """
 
-        bot_input = self.prompt(input_data)
-        response = self.llm.invoke(bot_input)
+        formatted_messages = self.prompt.format_messages(input_data)
 
-        return response
+        raw_response = self.llm.invoke(formatted_messages)
+
+        output = Output.model_validate_json(raw_response)
+
+        return output

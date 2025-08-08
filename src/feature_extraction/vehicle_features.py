@@ -8,6 +8,14 @@ from typing import Tuple, List
 import numpy as np
 from scipy.signal import butter, filtfilt
 
+__all__ = [
+    "low_pass_filter",
+    "approx_entropy",
+    "count_reversals",
+    "steering_reversals",
+    "lane_position_std_dev",
+]
+
 
 def low_pass_filter(
     theta: np.array, cutoff_freq_hz: float, filter_order: float, sampling_rate: float
@@ -16,8 +24,13 @@ def low_pass_filter(
 
     Args:
         theta (np.array): raw steering data
-        cutoff_freq_hz (float): low-pass Butterworth filter cutoff frequency (Hz)
-        filter_order (float): order of butterworth filter
+
+        cutoff_freq_hz (float): low-pass Butterworth filter cutoff frequency (Hz), 2Hz is
+        recommended as the optimal parameter for cognitive load based on findings from the
+        literature: "A Steering Wheel Reversal Rate Metric for Assessing Effects of Visual
+        and Cognitive Secondary Task Load"
+
+        filter_order (float): order of butterworth filter, 2nd order is recommended
         sampling_rate (float): sampling freq in Hz (samples per second)
 
     Returns:
@@ -36,18 +49,19 @@ def low_pass_filter(
 # and Cognitive Secondary Task Load](https://core.ac.uk/download/pdf/159068039.pdf)
 
 
-def approx_entropy(time_series: np.array, run_length: int, filter_level: int) -> float:
-    """Approximate entropy
+def approx_entropy(time_series: np.array, run_length: int = 2) -> float:
+    """Approximate entropy (2sec window) [https://www.mdpi.com/1424-8220/17/3/495]
 
     Args:
         time_series (np.array): steering movement data
         run_length (int): length of the run data (window with overlapping of the data,
         example x = [1,2,3], if runlength=2 then output will be [[1,2], [2,3]])
-        filter_level (int): threeshold value
 
     Returns:
         float: regularity (close to 0 : no irregularity, close to 1: irregularity)
     """
+    std_dev = np.std(time_series)
+    filter_level = 0.2 * std_dev
 
     def _maxdist(x_i, x_j):
         return max(abs(ua - va) for ua, va in zip(x_i, x_j))
@@ -95,7 +109,7 @@ def count_reversals(
     return Nr, R
 
 
-def steering_reversal_rate(filtered_theta: np.array, theta_min: float) -> int:
+def steering_reversals(filtered_theta: np.array, theta_min: float = 0.1) -> int:
     """calculate the steering wheel reversals of both upward and downward
 
     Args:

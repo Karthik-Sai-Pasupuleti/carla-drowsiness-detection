@@ -11,10 +11,15 @@ Reference:
 https://github.com/Pushtogithub23/Eye-Blink-Detection-using-MediaPipe-and-OpenCV
 """
 
-from typing import Union, Optional
 import mediapipe as mp
 import cv2
 import numpy as np
+
+__all__ = [
+    "EyeFeatureExtractor",
+    "MouthFeatureExtractor",
+    "CameraBasedFeatureExtractor",
+]
 
 
 class EyeFeatureExtractor:
