@@ -23,7 +23,7 @@ def main(theta_: np.array, sampling_freq: float, lane_position: np.array):
         fps = 30
 
     extractor = CameraBasedFeatureExtractor(fps)
-    last_metrics = None  # <-- store last known metrics
+    last_metrics = None  # store last known metrics
     if last_metrics:
         llm_input = {
             "perclos": last_metrics["perclos"],
@@ -46,3 +46,6 @@ def main(theta_: np.array, sampling_freq: float, lane_position: np.array):
         if metrics:
             print("metrics: ", metrics)
             last_metrics = metrics
+
+
+
