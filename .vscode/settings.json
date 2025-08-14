@@ -23,7 +23,7 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true
-    },
+    }
     // Code Actions
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",

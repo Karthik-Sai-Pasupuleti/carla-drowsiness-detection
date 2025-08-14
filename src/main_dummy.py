@@ -3,12 +3,12 @@
 import numpy as np
 import cv2
 
-from feature_extraction.camera_features import *
+from feature_extraction.drowsiness_inference import *
 from feature_extraction.vehicle_features import *
+from Driver_assistance_bot.bot import Bot
 
 
-def main(theta_: np.array, sampling_freq: float, lane_position: np.array):
-
+def main(bot_, theta_: np.array, sampling_freq: float, lane_position: np.array):
     filtered_theta = low_pass_filter(
         theta=theta_, cutoff_freq_hz=2, filter_order=2, sampling_rate=sampling_freq
     )
@@ -24,15 +24,6 @@ def main(theta_: np.array, sampling_freq: float, lane_position: np.array):
 
     extractor = CameraBasedFeatureExtractor(fps)
     last_metrics = None  # store last known metrics
-    if last_metrics:
-        llm_input = {
-            "perclos": last_metrics["perclos"],
-            "blink_rate": last_metrics["blink_frequency"],
-            "yawn_freq": last_metrics["yawn_frequency"],
-            "sdlp": sdlp,
-            "steering_entropy": entropy,
-            "steering_reversal_rate": steering_reversals_rate,
-        }
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -47,5 +38,24 @@ def main(theta_: np.array, sampling_freq: float, lane_position: np.array):
             print("metrics: ", metrics)
             last_metrics = metrics
 
+            llm_input = {
+            "perclos": last_metrics["perclos"],
+            "blink_rate": last_metrics["blink_frequency"],
+            "yawn_freq": last_metrics["yawn_frequency"],
+            "sdlp": sdlp,
+            "steering_entropy": entropy,
+            "steering_reversal_rate": steering_reversals_rate,
+            }
 
+            output = bot_.invoke(llm_input)
+            print(output)
+
+
+
+if __name__ == "__main__":
+    bot_  = Bot()
+    print('bot created')
+    theta = np.random.rand(30)
+    lp = np.random.rand(30)
+    main(bot_, theta, 30, lp)
 
