@@ -1,5 +1,6 @@
 """Main runner for Carla Drowsiness Detection with multiprocessing."""
 
+from pathlib import Path
 import multiprocessing
 import time
 from typing import Tuple
@@ -109,11 +110,9 @@ def main(prompt: dict, schema: dict, model_id: str):
 
 
 if __name__ == "__main__":
-    prompt_ = load_toml(
-        r"C:\Users\pasupuleti\Desktop\carla-drowsiness-detection\src\Driver_assistance_bot\configs\prompt.toml"
-    )
-    schema_ = load_json(
-        r"C:\Users\pasupuleti\Desktop\carla-drowsiness-detection\src\Driver_assistance_bot\configs\schema.json"
-    )
+    prompt_file = Path("src") / "Driver_assistance_bot" / "configs" / "prompt.toml"
+    schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
+    prompt_ = load_toml(prompt_file)
+    schema_ = load_json(schema_file)
     MODEL_ID = "llama3.1:8b"
     main(prompt_, schema_, MODEL_ID)

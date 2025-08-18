@@ -2,7 +2,7 @@ pylint
 black
 Pillow
 mediapipe
-# opencv-python
+opencv-python
 pydantic
 langchain
 langchain-core
@@ -11,4 +11,3 @@ langchain-ollama
 scipy
 toml
 pygame
-opencv-python opencv-stubs
