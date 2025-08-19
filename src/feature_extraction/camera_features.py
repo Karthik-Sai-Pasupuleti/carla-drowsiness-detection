@@ -8,6 +8,7 @@ import time
 import mediapipe as mp
 import cv2
 import numpy as np
+import PySpin
 
 from .utils import calculate_avg_ear, mouth_aspect_ratio
 
@@ -93,6 +94,107 @@ def camera_feature_extraction(data: dict):
     except Exception as e:  # pylint: disable=broad-exception-caught
         print("Error in Camera Feature Module:", e)
 
+
+# == Pyspin == #
+
+
+def pyspin_camera_feature_extraction(data):
+    system = PySpin.System.GetInstance()
+    cam_list = system.GetCameras()
+
+    if cam_list.GetSize() == 0:
+        print("No cameras detected by PySpin.")
+        cam_list.Clear()
+        system.ReleaseInstance()
+        return
+
+    cam = cam_list.GetByIndex(0)
+
+    try:
+        cam.Init()
+        cam.BeginAcquisition()
+        extractor = CameraBasedFeatureExtractor()
+
+        print("Starting acquisition... Press 'q' or ESC to quit.")
+
+        while True:
+            try:
+                # Acquire image with timeout
+                image_result = cam.GetNextImage(1000)  # 1000 ms
+            except PySpin.SpinnakerException as e:
+                print("Timeout or acquisition error:", e)
+                continue
+
+            if image_result.IsIncomplete():
+                print(f"Image incomplete with status {image_result.GetImageStatus()}")
+                image_result.Release()
+                continue
+
+            # Convert image to numpy array
+            img_data = image_result.GetNDArray()
+
+            # Ensure RGB format for Mediapipe
+            if img_data.ndim == 2:  # Grayscale
+                img_color = cv2.cvtColor(img_data, cv2.COLOR_GRAY2RGB)
+            else:  # Assume BGR from camera
+                img_color = cv2.cvtColor(img_data, cv2.COLOR_BGR2RGB)
+
+            # Process frame
+            ear, mar = extractor.process_frame(img_color)
+            current_time = time.time()
+            data["camera_frames"].append((current_time, ear, mar))
+
+            # Convert back to BGR for OpenCV display
+            display_img = cv2.cvtColor(img_color, cv2.COLOR_RGB2BGR)
+
+            if ear is not None and mar is not None:
+                cv2.putText(
+                    display_img,
+                    f"EAR: {ear:.3f}",
+                    (10, 120),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7,
+                    (0, 255, 255),
+                    2,
+                )
+                cv2.putText(
+                    display_img,
+                    f"MAR: {mar:.3f}",
+                    (10, 90),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7,
+                    (0, 255, 0),
+                    2,
+                )
+
+            cv2.imshow("Drowsiness Detection (PySpin Camera)", display_img)
+
+            key = cv2.waitKey(1) & 0xFF
+            image_result.Release()  # Always release after use
+
+            if key in [ord("q"), 27]:  # 'q' or ESC
+                break
+
+    except Exception as e:
+        print("Error in PySpin Camera Feature Module:", e)
+
+    finally:
+        try:
+            cam.EndAcquisition()
+        except Exception:
+            pass
+        try:
+            cam.DeInit()
+        except Exception:
+            pass
+
+        cam_list.Clear()
+        system.ReleaseInstance()
+        cv2.destroyAllWindows()
+        print("Camera and system released successfully.")
+
+
+# == Pyspin == #
 
 if __name__ == "__main__":
     # dummy data to run the script
