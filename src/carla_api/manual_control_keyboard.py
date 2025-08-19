@@ -1558,7 +1558,7 @@ def game_loop(args, shared_data):
 # ==============================================================================
 
 
-def carla_main(shared_data):
+def carla_keyboard(shared_data):
     argparser = argparse.ArgumentParser(description="CARLA Manual Control Client")
     argparser.add_argument(
         "-v",
@@ -1637,5 +1637,5 @@ def carla_main(shared_data):
 
 
 if __name__ == "__main__":
-    shared_data = {"vehicle_data": []}
-    carla_main(shared_data)
+    shared_data_ = {"vehicle_data": []}
+    carla_keyboard(shared_data_)

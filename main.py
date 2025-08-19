@@ -1,11 +1,14 @@
 """Main runner for Carla Drowsiness Detection with multiprocessing."""
 
+import argparse
 from pathlib import Path
 import multiprocessing
 import time
 from typing import Tuple
 from src.feature_extraction.camera_features import camera_feature_extraction
-from src.carla_api import carla_main
+
+from src.carla_api.manual_control_keyboard import carla_keyboard
+from src.carla_api.manual_control_steeringwheel import carla_steering_wheel
 from src.feature_extraction.sensor_fusion import data_association, metrics_calculation
 from src.Driver_assistance_bot.bot import Bot, load_json, load_toml
 
@@ -64,7 +67,7 @@ def metrics_worker(
         # time.sleep(interval)
 
 
-def main(prompt: dict, schema: dict, model_id: str):
+def main(prompt: dict, schema: dict, model_id: str, control: str):
     # Initialize shared data
     manager = multiprocessing.Manager()
     shared_data = manager.dict(
@@ -74,8 +77,16 @@ def main(prompt: dict, schema: dict, model_id: str):
         }
     )
 
+    # Select Carla control method
+    if control == "keyboard":
+        carla_target = carla_keyboard
+    elif control == "steering":
+        carla_target = carla_steering_wheel
+    else:
+        raise ValueError("Invalid control option. Choose 'keyboard' or 'steering'.")
+
     # Start child processes
-    carla_process = multiprocessing.Process(target=carla_main, args=(shared_data,))
+    carla_process = multiprocessing.Process(target=carla_target, args=(shared_data,))
     camera_process = multiprocessing.Process(
         target=camera_feature_extraction, args=(shared_data,)
     )
@@ -110,9 +121,19 @@ def main(prompt: dict, schema: dict, model_id: str):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Carla Drowsiness Detection Runner")
+    parser.add_argument(
+        "--control",
+        type=str,
+        choices=["keyboard", "steering"],
+        default="steering",  # default is steering now
+        help="Choose Carla control method",
+    )
+    args = parser.parse_args()
+
     prompt_file = Path("src") / "Driver_assistance_bot" / "configs" / "prompt.toml"
     schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
     prompt_ = load_toml(prompt_file)
     schema_ = load_json(schema_file)
     MODEL_ID = "llama3.1:8b"
-    main(prompt_, schema_, MODEL_ID)
+    main(prompt_, schema_, MODEL_ID, args.control)
