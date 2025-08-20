@@ -11,3 +11,4 @@ langchain-ollama
 scipy
 toml
 pygame
+pyttsx3
