@@ -5,10 +5,13 @@ from pathlib import Path
 import multiprocessing
 import time
 from typing import Tuple
-from src.feature_extraction.camera_features import camera_feature_extraction
+from src.feature_extraction.camera_features import (
+    camera_feature_extraction,
+    pyspin_camera_feature_extraction,
+)
 
 from src.carla_api.manual_control_keyboard import carla_keyboard
-from src.carla_api.manual_control_steeringwheel import carla_steering_wheel
+from src.carla_api.manual_control_steering_wheel import carla_steering_wheel
 from src.feature_extraction.sensor_fusion import data_association, metrics_calculation
 from src.Driver_assistance_bot.bot import Bot, load_json, load_toml
 

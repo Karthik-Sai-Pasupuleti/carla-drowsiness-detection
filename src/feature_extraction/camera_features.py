@@ -8,7 +8,8 @@ import time
 import mediapipe as mp
 import cv2
 import numpy as np
-import PySpin
+
+# import PySpin
 
 from .utils import calculate_avg_ear, mouth_aspect_ratio
 

@@ -127,12 +127,8 @@ class Bot:
 # gpt-oss:20b
 
 if __name__ == "__main__":
-    prompts_ = load_toml(
-        r"C:\Users\pasupuleti\Desktop\carla-drowsiness-detection\src\Driver_assistance_bot\configs\prompt.toml"
-    )
-    schema_ = load_json(
-        r"C:\Users\pasupuleti\Desktop\carla-drowsiness-detection\src\Driver_assistance_bot\configs\schema.json"
-    )
+    prompts_ = load_toml(r"src\Driver_assistance_bot\configs\prompt.toml")
+    schema_ = load_json(r"src\Driver_assistance_bot\configs\schema.json")
     bot_ = Bot("llama3.1:8b", prompts_, schema_)
     llm_input = {
         "perclos": 30,
