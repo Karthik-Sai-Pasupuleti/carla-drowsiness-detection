@@ -59,16 +59,8 @@ Use ARROWS or WASD keys for control.
 import sys
 import time
 import carla
-
 from carla import ColorConverter as cc
 
-if sys.version_info >= (3, 0):
-
-    from configparser import ConfigParser
-
-else:
-
-    from ConfigParser import RawConfigParser as ConfigParser
 
 import argparse
 import collections
@@ -79,6 +71,11 @@ import random
 import re
 import os
 import weakref
+
+if sys.version_info >= (3, 0):
+    from configparser import ConfigParser
+else:
+    from ConfigParser import RawConfigParser as ConfigParser
 
 try:
     import pygame
@@ -440,7 +437,7 @@ class DualControl(object):
         self._joystick.init()
 
         self._parser = ConfigParser()
-        self._parser.read("src\carla_api\wheel_config.ini")
+        self._parser.read("src/carla_api/wheel_config.ini")
         self._steer_idx = int(self._parser.get("G29 Racing Wheel", "steering_wheel"))
         self._throttle_idx = int(self._parser.get("G29 Racing Wheel", "throttle"))
         self._brake_idx = int(self._parser.get("G29 Racing Wheel", "brake"))

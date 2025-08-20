@@ -60,6 +60,7 @@ def metrics_worker(
                 mar_threshold=0.5,
                 window=time_window,
             )
+            time.sleep(30)
             print(f"Metrics: {metrics}")
             output = adas_bot.invoke(metrics)
             print("Bot output:", output)
@@ -91,7 +92,7 @@ def main(prompt: dict, schema: dict, model_id: str, control: str):
     # Start child processes
     carla_process = multiprocessing.Process(target=carla_target, args=(shared_data,))
     camera_process = multiprocessing.Process(
-        target=camera_feature_extraction, args=(shared_data,)
+        target=pyspin_camera_feature_extraction, args=(shared_data,)
     )
     metrics_process = multiprocessing.Process(
         target=metrics_worker, args=(shared_data, prompt, schema, model_id, 30, 30)
@@ -138,5 +139,5 @@ if __name__ == "__main__":
     schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
     prompt_ = load_toml(prompt_file)
     schema_ = load_json(schema_file)
-    MODEL_ID = "llama3.1:8b"
+    MODEL_ID = "llama3.2:latest"
     main(prompt_, schema_, MODEL_ID, args.control)

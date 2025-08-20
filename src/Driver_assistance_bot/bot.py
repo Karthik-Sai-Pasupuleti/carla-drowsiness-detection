@@ -6,6 +6,7 @@ import json
 from pprint import pprint
 from typing import List, Literal, Optional
 import toml
+from pathlib import Path
 from pydantic import BaseModel, Field, StrictFloat
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
@@ -127,9 +128,12 @@ class Bot:
 # gpt-oss:20b
 
 if __name__ == "__main__":
-    prompts_ = load_toml(r"src\Driver_assistance_bot\configs\prompt.toml")
-    schema_ = load_json(r"src\Driver_assistance_bot\configs\schema.json")
-    bot_ = Bot("llama3.1:8b", prompts_, schema_)
+    prompt_file = Path("src") / "Driver_assistance_bot" / "configs" / "prompt.toml"
+    schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
+    prompt_ = load_toml(prompt_file)
+    schema_ = load_json(schema_file)
+
+    bot_ = Bot("llama3.2:latest", prompt_, schema_)
     llm_input = {
         "perclos": 30,
         "blink_rate": 60,
