@@ -5,6 +5,7 @@ from pathlib import Path
 import multiprocessing
 import time
 from typing import Tuple
+
 from src.feature_extraction.camera_features import (
     camera_feature_extraction,
     pyspin_camera_feature_extraction,
@@ -13,14 +14,13 @@ from src.feature_extraction.camera_features import (
 from src.carla_api.manual_control_keyboard import carla_keyboard
 from src.carla_api.manual_control_steering_wheel import carla_steering_wheel
 from src.feature_extraction.sensor_fusion import data_association, metrics_calculation
-from src.Driver_assistance_bot.bot import Bot, load_json, load_toml
+from src.Driver_assistance_bot.basebot import DriverAssistanceBot, BotConfig
+from src.Driver_assistance_bot.utils import load_toml, load_json
 
 
 def metrics_worker(
     shared_data: dict[Tuple[Tuple]],
-    prompts: dict,
-    schema: dict,
-    model_id: str,
+    config: BotConfig,
     time_window: int,
     interval: int,
 ):
@@ -35,7 +35,7 @@ def metrics_worker(
         interval (int): time to next iteration.
     """
 
-    adas_bot = Bot(model_id, prompts, schema)
+    adas_bot = DriverAssistanceBot(config)
 
     while True:
         try:
@@ -71,7 +71,7 @@ def metrics_worker(
         # time.sleep(interval)
 
 
-def main(prompt: dict, schema: dict, model_id: str, control: str):
+def main(config: BotConfig, control: str):
     # Initialize shared data
     manager = multiprocessing.Manager()
     shared_data = manager.dict(
@@ -95,7 +95,7 @@ def main(prompt: dict, schema: dict, model_id: str, control: str):
         target=pyspin_camera_feature_extraction, args=(shared_data,)
     )
     metrics_process = multiprocessing.Process(
-        target=metrics_worker, args=(shared_data, prompt, schema, model_id, 30, 30)
+        target=metrics_worker, args=(shared_data, config, 30, 30)
     )
 
     processes = [carla_process, camera_process, metrics_process]
@@ -140,4 +140,5 @@ if __name__ == "__main__":
     prompt_ = load_toml(prompt_file)
     schema_ = load_json(schema_file)
     MODEL_ID = "llama3.2:latest"
-    main(prompt_, schema_, MODEL_ID, args.control)
+    config_ = BotConfig(model_id=MODEL_ID, prompts=prompt_, schema=schema_)
+    main(config_, args.control)

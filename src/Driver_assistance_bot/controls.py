@@ -1,7 +1,29 @@
+"""This module provides the Logitech G29 steering wheel vibration control and
+text-to-speech functionality using pyttsx3."""
+
 import os
 import time
-import evdev
 from threading import Lock
+import pyttsx3
+
+
+class VoiceControl:
+    """This class handles text to speech conversion using the pyttsx3 library."""
+
+    def __init__(self):
+        self.engine = pyttsx3.init()
+        self.engine.setProperty("rate", 145)
+        self.engine.setProperty("volume", 1.0)  # volume level between 0 to 1.
+
+    def text_to_speech(self, text: str):
+        """convert the text to speech using pyttsx library.
+
+        Args:
+            text (str): text from the bot spoken aloud.
+        """
+        self.engine.say(text)
+        self.engine.runAndWait()
+        self.engine.stop()
 
 
 class WheelControlVibration:
@@ -17,20 +39,22 @@ class WheelControlVibration:
     - pygame:  For event handling and joystick input (if needed for key presses).
     """
 
-    # HIDRAW_DEVICE = "hidraw7"  #logitech_raw
+    HIDRAW_DEVICE = "logitech_raw"  #
 
-    def __init__(self, device):
+    def __init__(self):
         """
         Initializes the WheelControlVibration object. Opens the raw
         HID device for the Logitech G29.
         """
         self.raw_dev = None
         try:
-            self.raw_dev = os.open(device, os.O_RDWR)
+            self.raw_dev = os.open(
+                "/dev/{}".format(WheelControlVibration.HIDRAW_DEVICE), os.O_RDWR
+            )
             print("Logitech G29 initialized successfully.")
         except OSError as e:
             print(
-                f"Failed to initialize Logitech G29 device {device}. Vibration will not work.  Error: {e}"
+                f"Failed to initialize Logitech G29 device {self.HIDRAW_DEVICE}. Vibration will not work.  Error: {e}"
             )
             self.raw_dev = None  # Important: Set to None to prevent errors later.
 
@@ -104,7 +128,13 @@ class WheelControlVibration:
 
 if __name__ == "__main__":
     # Example usage
-    model = WheelControlVibration("/dev/input/event20")
-    model.vibrate()
+    # Wheel Control Vibration
+    wheel_vibration = WheelControlVibration()
+    wheel_vibration.vibrate()
     time.sleep(0.1)
-    model.close()
+    wheel_vibration.vibrate(duration=0)  # Stop vibration
+    wheel_vibration.close()
+
+    # Text to Speech Control
+    bot = VoiceControl()
+    bot.text_to_speech("Hello, this is a test of the text to speech functionality.")

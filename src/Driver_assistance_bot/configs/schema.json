@@ -1,6 +1,6 @@
 {
     "title": "Driver_Drowsiness_Assessment",
-    "description": "Structured output for driver drowsiness risk assessment.",
+    "description": "Structured reasoning for driver drowsiness risk assessment.",
     "type": "object",
     "properties": {
         "drowsiness_level": {
@@ -9,30 +9,17 @@
             "enum": [
                 "low",
                 "medium",
-                "high"
+                "high",
+                "critical"
             ]
         },
         "reasoning": {
             "type": "string",
-            "description": "Brief metric-based explanation for the assessment."
-        },
-        "actions": {
-            "type": "array",
-            "description": "List of countermeasures to trigger.",
-            "items": {
-                "type": "string",
-                "enum": [
-                    "speaker",
-                    "fan",
-                    "steering_vibration"
-                ]
-            },
-            "minItems": 0
+            "description": "Brief explanation based on input metrics that led to the decision."
         }
     },
     "required": [
         "drowsiness_level",
-        "reasoning",
-        "actions"
+        "reasoning"
     ]
 }
