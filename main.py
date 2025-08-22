@@ -5,6 +5,9 @@ from pathlib import Path
 import multiprocessing
 import time
 from typing import Tuple
+import evdev
+from evdev import ecodes, InputDevice
+
 
 from src.feature_extraction.camera_features import (
     camera_feature_extraction,
@@ -16,6 +19,13 @@ from src.carla_api.manual_control_steering_wheel import carla_steering_wheel
 from src.feature_extraction.sensor_fusion import data_association, metrics_calculation
 from src.Driver_assistance_bot.basebot import DriverAssistanceBot, BotConfig
 from src.Driver_assistance_bot.utils import load_toml, load_json
+
+
+def steering_auto_centering(val: int = 35535):
+    device = evdev.list_devices()[0]
+    evtdev = InputDevice(device)
+    # val \in [0,65535]
+    evtdev.write(ecodes.EV_FF, ecodes.FF_RUMBLE, val)
 
 
 def metrics_worker(
@@ -137,6 +147,7 @@ if __name__ == "__main__":
     schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
     prompt_ = load_toml(prompt_file)
     schema_ = load_json(schema_file)
-    MODEL_ID = "llama3.2:latest"
+    MODEL_ID = "phi3:mini"
     config_ = BotConfig(model_id=MODEL_ID, prompts=prompt_, schema=schema_)
+    steering_auto_centering(35000)
     main(config_, args.control)

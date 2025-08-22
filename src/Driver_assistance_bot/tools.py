@@ -1,9 +1,9 @@
 """_summary_"""
 
+import time
 from pydantic import BaseModel, Field
 from langchain.tools import tool
-import time
-from controls import VoiceControl, WheelControlVibration
+from .controls import VoiceControl, WheelControlVibration
 
 voice = VoiceControl()
 steering = WheelControlVibration()

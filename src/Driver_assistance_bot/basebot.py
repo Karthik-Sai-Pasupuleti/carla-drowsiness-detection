@@ -6,10 +6,9 @@ Returns:
 
 from pprint import pprint
 from pathlib import Path
-from Bot import Bot, BotConfig
-from utils import load_toml, load_json
-from tools import vibrate_steering_wheel, text_to_voice
-from controls import VoiceControl, WheelControlVibration
+from .bot import Bot, BotConfig
+from .utils import load_toml, load_json
+from .tools import vibrate_steering_wheel, text_to_voice
 
 
 class DriverAssistanceBot(Bot):
