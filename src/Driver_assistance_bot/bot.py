@@ -23,7 +23,7 @@ class Bot:
         model_id = config.model_id
         prompts = config.prompts
         self.schema = config.schema
-        self.llm = ChatOllama(model=model_id)
+        self.llm = ChatOllama(model=model_id, temperature=0)
 
         # Load prompts from TOML
         system_prompt = prompts["bot_prompt"]["SYSTEM"]
@@ -76,9 +76,12 @@ class Bot:
     class OutputWithoutActions(BaseModel):
         """Output class without actions for driver assistance bot"""
 
-        drowsiness_level: Literal["low", "medium", "high"] = Field(
+        drowsiness_level: Literal["low", "medium", "high", "critical"] = Field(
             description="Detected drowsiness risk level."
         )
         reasoning: str = Field(
             description="Explanation based on input metrics that led to the decision."
+        )
+        tool_calls: List[Dict[str, Any]] = Field(
+            description="List of tool calls to execute in response to detected drowsiness."
         )

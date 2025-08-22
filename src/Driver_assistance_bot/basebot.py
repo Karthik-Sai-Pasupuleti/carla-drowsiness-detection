@@ -6,38 +6,46 @@ Returns:
 
 from pprint import pprint
 from pathlib import Path
-from .Bot import Bot, BotConfig
-from .utils import load_toml, load_json
-from .tools import VoiceAlertTool, SteeringVibrationTool
+from Bot import Bot, BotConfig
+from utils import load_toml, load_json
+from tools import vibrate_steering_wheel, text_to_voice
+from controls import VoiceControl, WheelControlVibration
 
 
 class DriverAssistanceBot(Bot):
     """Driver drowsiness detection bot"""
 
+    # In your __init__ method, define the tool mapping
     def __init__(self, config: BotConfig):
-        """Initialize the driver assistance agent.
-
-        Args:
-            config (BotConfig): Configuration for the bot.
-        """
         super().__init__(config)
-        tools = [VoiceAlertTool(), SteeringVibrationTool()]
-        self.model = self.llm.bind_tools(tools)
-        self.model_with_tools = self.model.with_structured_output(self.schema)
+        # Define your tools and create a mapping
+        self.tools = [vibrate_steering_wheel, text_to_voice]
+        self.tool_map = {tool.name: tool for tool in self.tools}
+        self.model = self.llm.bind_tools(self.tools)
+        self.model = self.model.with_structured_output(self.schema)
 
+    # In your invoke method, use the mapping to get the tool and then invoke it
     def invoke(self, input_data: Bot.Input) -> Bot.OutputWithoutActions:
-        """
-        Invoke the LLM
-        Args:
-            input_data (Input): Driver monitoring and vehicle metrics
-        Returns:
-            Output: LLM response parsed into Output model
-        """
         formatted_messages = self.prompt.invoke({"drowsiness_metrics": input_data})
-
-        raw_response = self.model_with_tools.invoke(formatted_messages)
+        raw_response = self.model.invoke(formatted_messages)
         output = Bot.OutputWithoutActions.model_validate(raw_response)
-        return output
+
+        if output.tool_calls:
+            for tool_call in output.tool_calls:
+                tool_name = tool_call["name"]
+                args = tool_call["args"]
+
+                # Check if the tool exists in your map
+                if tool_name in self.tool_map:
+                    tool_instance = self.tool_map[tool_name]
+                    print(f"Executing tool: {tool_name} with args: {args}")
+                    # The crucial change: use the `invoke` method of the tool
+                    tool_result = tool_instance.invoke(args)
+                    print(f"Tool execution result: {tool_result}")
+                else:
+                    print(f"Warning: Tool '{tool_name}' not found in tool map.")
+
+        return raw_response
 
 
 if __name__ == "__main__":
@@ -45,18 +53,19 @@ if __name__ == "__main__":
     schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
     prompt_ = load_toml(prompt_file)
     schema_ = load_json(schema_file)
-    MODEL_ID = "llama3.1:8b"  # "llama3.2:latest"
+    MODEL_ID = "phi3:mini"  # "llama3.2:latest"/
+    # MODEL_ID = "gpt-oss:20b"
 
     config_ = BotConfig(model_id=MODEL_ID, prompts=prompt_, schema=schema_)
     bot_ = DriverAssistanceBot(config_)
 
     llm_input = {
-        "perclos": 30,
-        "blink_rate": 60,
-        "yawn_freq": 20,
-        "sdlp": 0.1,
+        "perclos": 0.6,
+        "blink_rate": 12,
+        "yawn_freq": 5,
+        "sdlp": 0.8,
         "steering_entropy": 0.6,
         "steering_reversal_rate": 10,
     }
     result = bot_.invoke(llm_input)
-    pprint(result.dict())
+    pprint(result)

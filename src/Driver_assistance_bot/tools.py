@@ -1,55 +1,62 @@
-"""_summary_
+"""_summary_"""
 
-Raises:
-    NotImplementedError: _description_
-    NotImplementedError: _description_
-    NotImplementedError: _description_
-
-Returns:
-    _type_: _description_
-"""
-
-from langchain.tools import BaseTool
-from typing import Optional, Type
 from pydantic import BaseModel, Field
+from langchain.tools import tool
 import time
+from controls import VoiceControl, WheelControlVibration
 
-from .controls import VoiceControl, WheelControlVibration
-
-# Voice Alert Tool
-
-
-class VoiceAlertInput(BaseModel):
-    message: str = Field(..., description="The message to speak out loud.")
+voice = VoiceControl()
+steering = WheelControlVibration()
 
 
-class VoiceAlertTool(BaseTool):
-    name: str = "voice_alert"
-    description: str = "Speak a message to alert the driver via text-to-speech."
-    args_schema: Type[BaseModel] = VoiceAlertInput
+# schemas
+class TextToVoiceInput(BaseModel):
+    """Input schema for text-to-voice conversion."""
 
-    def _run(self, message: str) -> str:
-        voice = VoiceControl()
-        voice.text_to_speech(message)
-        return f"Voice alert spoken: {message}"
+    text: str = Field(..., description="The text to convert to speech.")
 
 
-# Steering Vibration Tool
+class VibrateSteeringInput(BaseModel):
+    """Input schema for steering wheel vibration."""
 
-
-class SteeringVibrationInput(BaseModel):
     intensity: int = Field(30, ge=0, le=60, description="Vibration intensity (0-60).")
     duration: float = Field(0.2, gt=0, description="Duration of vibration in seconds.")
 
 
-class SteeringVibrationTool(BaseTool):
-    name: str = "steering_vibration"
-    description: str = "Trigger steering wheel vibration to wake up the driver."
-    args_schema: Type[BaseModel] = SteeringVibrationInput
+# tools
 
-    def _run(self, intensity: int, duration: float) -> str:
-        wheel = WheelControlVibration()
-        wheel.vibrate(duration=duration, intensity=intensity)
-        time.sleep(duration)
-        wheel.vibrate(duration=0)  # stop
-        return f"Steering vibration triggered (intensity={intensity}, duration={duration}s)."
+
+@tool("voice_alert", args_schema=TextToVoiceInput, return_direct=True)
+def text_to_voice(text: str) -> str:
+    """Convert text to speech.
+
+    Args:
+        text (TextToVoiceInput): The text to convert to speech.
+
+    Returns:
+        str: A message indicating the text has been converted to speech.
+    """
+    try:
+        voice.text_to_speech(text)
+    except Exception as e:
+        return f"Error converting text to speech: {e}"
+    return f"Text '{text}' has been converted to speech."
+
+
+@tool("steering_vibration", args_schema=VibrateSteeringInput, return_direct=True)
+def vibrate_steering_wheel(duration: float, intensity: int) -> str:
+    """Vibrate the steering wheel.
+
+    Args:
+        input (VibrateSteeringInput): The input containing vibration parameters.
+
+    Returns:
+        str: A message indicating the steering wheel has been vibrated.
+    """
+    try:
+        steering.vibrate(duration, intensity)
+        time.sleep(0.2)
+        steering.vibrate(duration=0)
+    except Exception as e:
+        return f"Error vibrating steering wheel: {e}"
+    return f"Steering wheel vibrated with intensity {intensity} for {duration} seconds."

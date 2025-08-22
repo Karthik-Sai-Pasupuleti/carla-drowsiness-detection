@@ -1,25 +1,83 @@
 {
     "title": "Driver_Drowsiness_Assessment",
-    "description": "Structured reasoning for driver drowsiness risk assessment.",
     "type": "object",
     "properties": {
         "drowsiness_level": {
             "type": "string",
-            "description": "Overall drowsiness risk level.",
             "enum": [
                 "low",
                 "medium",
                 "high",
                 "critical"
-            ]
+            ],
+            "description": "The overall drowsiness level of the driver."
         },
         "reasoning": {
             "type": "string",
-            "description": "Brief explanation based on input metrics that led to the decision."
+            "description": "Explain why the driver is assessed at this drowsiness level."
+        },
+        "tool_calls": {
+            "type": "array",
+            "description": "A list of tools the bot wants to call to alert or correct the driver.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "enum": [
+                            "voice_alert",
+                            "steering_vibration"
+                        ],
+                        "description": "The name of the tool to invoke."
+                    },
+                    "args": {
+                        "type": "object",
+                        "description": "Arguments for the tool.",
+                        "oneOf": [
+                            {
+                                "properties": {
+                                    "text": {
+                                        "type": "string",
+                                        "description": "The message to be spoken in a voice alert."
+                                    }
+                                },
+                                "required": [
+                                    "text"
+                                ]
+                            },
+                            {
+                                "properties": {
+                                    "intensity": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 60,
+                                        "description": "Vibration intensity for the steering wheel."
+                                    },
+                                    "duration": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "description": "Duration of vibration in seconds."
+                                    }
+                                },
+                                "required": [
+                                    "intensity",
+                                    "duration"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "args"
+                ]
+            }
         }
     },
     "required": [
         "drowsiness_level",
-        "reasoning"
-    ]
+        "reasoning",
+        "tool_calls"
+    ],
+    "additionalProperties": false
 }

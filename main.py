@@ -68,8 +68,6 @@ def metrics_worker(
         except Exception as e:
             print(f"Metrics/Bot processing error: {e}")
 
-        # time.sleep(interval)
-
 
 def main(config: BotConfig, control: str):
     # Initialize shared data
