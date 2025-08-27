@@ -2,41 +2,40 @@
 blink frequency, PERCLOS, Yawning frequency and alert the driver if he/she gets drowsy.
 """
 
-from typing import List, Literal, Optional, Dict, Any
-from pydantic import BaseModel, Field, StrictFloat
+from pprint import pprint
+import uuid
+from typing import (
+    List,
+    Literal,
+    Optional,
+    Dict,
+    Sequence,
+    Callable,
+    Any,
+)
+from pydantic import BaseModel, Field, StrictFloat, ValidationError
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
-
-
-class BotConfig(BaseModel):
-    """Configuration for the driver assistance bot."""
-
-    model_id: str
-    prompts: Dict[str, Any]
-    schema: Dict[str, Any]
+from langgraph.prebuilt import ToolNode
+from langchain.schema import AIMessage
+from langgraph.prebuilt import create_react_agent
 
 
 class Bot:
-    """Contains all schemas for the driver assistance bot."""
+    """Bot schemas"""
 
-    def __init__(self, config: BotConfig):
-        model_id = config.model_id
-        prompts = config.prompts
-        self.schema = config.schema
-        self.llm = ChatOllama(model=model_id, temperature=0)
+    class BotConfig(BaseModel):
+        """Configuration for the driver assistance bot."""
 
-        # Load prompts from TOML
-        system_prompt = prompts["bot_prompt"]["SYSTEM"]
-        user_prompt = prompts["bot_prompt"]["USER"]
-
-        self.prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                ("user", user_prompt),
-            ]
+        model_id: str
+        system_prompt: str | None = None
+        user_prompt: str | None = None
+        schema: Dict[str, Any] | None = Field(
+            default=None,
+            description="Pydantic schema class for structured output (e.g., OutputWithActions)",
         )
-
-        # self.str_llm = llm.with_structured_output(schema)
+        tools: Sequence[Callable[..., Any]] | None = None
+        temperature: float | None = None
 
     class Input(BaseModel):
         """Input data for the driver assistance bot"""
@@ -60,20 +59,7 @@ class Bot:
             default=None, description="Steering direction changes per minute."
         )
 
-    class OutputWithActions(BaseModel):
-        """Output class with actions for driver assistance bot"""
-
-        drowsiness_level: Literal["low", "medium", "high"] = Field(
-            description="Detected drowsiness risk level."
-        )
-        reasoning: str = Field(
-            description="Explanation based on input metrics that led to the decision."
-        )
-        actions: List[Literal["speaker", "fan", "steering_vibration"]] = Field(
-            description="List of actions to trigger in response to detected drowsiness."
-        )
-
-    class OutputWithoutActions(BaseModel):
+    class Output(BaseModel):
         """Output class without actions for driver assistance bot"""
 
         drowsiness_level: Literal["low", "medium", "high", "critical"] = Field(
@@ -85,3 +71,96 @@ class Bot:
         tool_calls: List[Dict[str, Any]] = Field(
             description="List of tool calls to execute in response to detected drowsiness."
         )
+
+
+# class BaseBot(Bot):
+#     def __init__(
+#         self,
+#         config: Bot.BotConfig,
+#     ):
+
+#         self.llm = ChatOllama(
+#             model=config.model_id,
+#             temperature=config.temperature,
+#         )
+
+#         # prompts
+#         self.prompt = ChatPromptTemplate.from_messages(
+#             [
+#                 ("system", config.system_prompt),
+#                 ("user", config.user_prompt),
+#             ]
+#         )
+
+#         self.llm.bind_tools(config.tools)
+#         self.llm.with_structured_output(config.schema)
+#         self.tool_node = ToolNode(config.tools, handle_tool_errors=error_handling)
+
+#     def invoke(self, input_data: Bot.Input):
+#         inputs = {"drowsiness_metrics": input_data.dict()}
+#         chain = self.prompt | self.llm
+#         raw_output = chain.invoke(inputs)
+
+#         try:
+#             validated_output = Bot.Output.model_validate_json(raw_output.content)
+
+#             tool_calls = []
+#             for call in validated_output.tool_calls:
+#                 tool_calls.append(
+#                     {
+#                         "name": call["name"],
+#                         "args": call["args"],
+#                         "id": str(uuid.uuid4()),  # unique ID for tracking
+#                         "type": "tool_call",
+#                     }
+#                 )
+
+#             result = self.tool_node.invoke(tool_calls)
+#             print(result)
+#             return validated_output
+
+#         except ValidationError as e:
+#             print("Validation failed:", e)
+#             raise e
+
+
+class BaseBot(Bot):
+    def __init__(
+        self,
+        config: Bot.BotConfig,
+    ):
+
+        llm = ChatOllama(
+            model=config.model_id,
+            temperature=config.temperature,
+        )
+
+        # prompts
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", config.system_prompt),
+                # ("user", config.user_prompt),
+            ]
+        )
+
+        self.agent = create_react_agent(
+            model=llm,
+            tools=config.tools,
+            prompt=config.system_prompt,
+            name="DriverAssistanceAgent",
+        )
+
+    def invoke(self, input_data: Bot.Input):
+
+        raw_ouptut = self.agent.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f" Drowsiness metrics: {input_data} Based on these metrics, assess the driver’s drowsiness level, reasoning, and recommend alert tools. ",
+                    }
+                ]
+            }
+        )
+
+        return raw_ouptut

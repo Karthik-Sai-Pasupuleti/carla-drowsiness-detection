@@ -25,8 +25,8 @@
                     "name": {
                         "type": "string",
                         "enum": [
-                            "voice_alert",
-                            "steering_vibration"
+                            "text_to_voice",
+                            "vibrate_steering_wheel"
                         ],
                         "description": "The name of the tool to invoke."
                     },

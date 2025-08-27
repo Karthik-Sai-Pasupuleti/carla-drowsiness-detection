@@ -1,62 +1,63 @@
-"""_summary_"""
-
+import asyncio
 import time
+import logging
+import threading
 from pydantic import BaseModel, Field
 from langchain.tools import tool
-from .controls import VoiceControl, WheelControlVibration
+from controls import VoiceControl, WheelControlVibration
 
 voice = VoiceControl()
-steering = WheelControlVibration()
+
+# configure logging once at the start of your program
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 
-# schemas
-class TextToVoiceInput(BaseModel):
-    """Input schema for text-to-voice conversion."""
-
+class VoiceAlertSchema(BaseModel):
     text: str = Field(..., description="The text to convert to speech.")
 
 
-class VibrateSteeringInput(BaseModel):
-    """Input schema for steering wheel vibration."""
-
-    intensity: int = Field(30, ge=0, le=60, description="Vibration intensity (0-60).")
-    duration: float = Field(0.2, gt=0, description="Duration of vibration in seconds.")
+class VibrateSteeringSchema(BaseModel):
+    duration: float = Field(..., gt=0, le=3, description="Duration in seconds")
+    intensity: int = Field(..., ge=0, le=60, description="Vibration intensity")
 
 
-# tools
+def voice_alert(text: str) -> str:
+    """Alert the driver via text-to-voice conversion."""
+
+    def _speak():
+        try:
+            print("voice command initialize voice alert")
+            voice.text_to_speech(text)
+            print("voice command initialization complete")
+            return f"Voice alert started for text: '{text}'"
+        except Exception as e:
+            logging.error(f"[Voice Alert Error] {e}")
+
+    threading.Thread(target=_speak, daemon=True).start()
 
 
-@tool("voice_alert", args_schema=TextToVoiceInput, return_direct=True)
-def text_to_voice(text: str) -> str:
-    """Convert text to speech.
-
-    Args:
-        text (TextToVoiceInput): The text to convert to speech.
-
-    Returns:
-        str: A message indicating the text has been converted to speech.
-    """
-    try:
-        voice.text_to_speech(text)
-    except Exception as e:
-        return f"Error converting text to speech: {e}"
-    return f"Text '{text}' has been converted to speech."
-
-
-@tool("steering_vibration", args_schema=VibrateSteeringInput, return_direct=True)
+# ---------------- Vibrate Steering ----------------
+@tool(args_schema=VibrateSteeringSchema)
 def vibrate_steering_wheel(duration: float, intensity: int) -> str:
-    """Vibrate the steering wheel.
-
-    Args:
-        input (VibrateSteeringInput): The input containing vibration parameters.
-
-    Returns:
-        str: A message indicating the steering wheel has been vibrated.
     """
-    try:
-        steering.vibrate(duration, intensity)
-        time.sleep(0.2)
-        steering.vibrate(duration=0)
-    except Exception as e:
-        return f"Error vibrating steering wheel: {e}"
-    return f"Steering wheel vibrated with intensity {intensity} for {duration} seconds."
+    Vibrates the steering wheel to alert the driver.
+    The duration of the vibration must be 3 seconds or less.
+    The intensity must be 60 or less.
+    """
+
+    def _vibrate():
+        try:
+            print("initialize vibrate steering wheel")
+            steering = WheelControlVibration()
+            print("end=initialize vibrate steering wheel")
+            steering.vibrate(duration=duration, intensity=intensity)
+            time.sleep(duration)
+            steering.vibrate(duration=0)  # stop vibration
+            print("end=vibrate steering wheel")
+            return f"Steering wheel vibration started with intensity {intensity} for {duration} seconds."
+        except Exception as e:
+            logging.error(f"[Steering Wheel Error] {e}")
+
+    threading.Thread(target=_vibrate, daemon=True).start()

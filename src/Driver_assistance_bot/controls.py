@@ -3,27 +3,38 @@ text-to-speech functionality using pyttsx3."""
 
 import os
 import time
+import threading
 from threading import Lock
 import pyttsx3
+import logging
+import asyncio
 
 
 class VoiceControl:
-    """This class handles text to speech conversion using the pyttsx3 library."""
+    """Handles text-to-speech conversion safely by creating a fresh engine each time."""
 
     def __init__(self):
-        self.engine = pyttsx3.init()
-        self.engine.setProperty("rate", 145)
-        self.engine.setProperty("volume", 1.0)  # volume level between 0 to 1.
+        self.rate = 145
+        self.volume = 1.0
+        self.lock = threading.Lock()
 
     def text_to_speech(self, text: str):
-        """convert the text to speech using pyttsx library.
+        """Speak text asynchronously in a thread-safe way."""
 
-        Args:
-            text (str): text from the bot spoken aloud.
-        """
-        self.engine.say(text)
-        self.engine.runAndWait()
-        self.engine.stop()
+        def speak():
+            try:
+                with self.lock:
+
+                    engine = pyttsx3.init()
+                    engine.setProperty("rate", self.rate)
+                    engine.setProperty("volume", self.volume)
+                    engine.say(text)
+                    engine.runAndWait()
+                    engine.stop()  # ensure cleanup
+            except Exception as e:
+                logging.error(f"[VoiceControl Error] {e}")
+
+        threading.Thread(target=speak, daemon=True).start()
 
 
 class WheelControlVibration:
@@ -134,7 +145,6 @@ if __name__ == "__main__":
     time.sleep(0.1)
     wheel_vibration.vibrate(duration=0)  # Stop vibration
     wheel_vibration.close()
-
     # Text to Speech Control
     bot = VoiceControl()
     bot.text_to_speech("Hello, this is a test of the text to speech functionality.")

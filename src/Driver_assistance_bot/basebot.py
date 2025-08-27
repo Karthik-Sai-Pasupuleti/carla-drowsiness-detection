@@ -6,15 +6,15 @@ Returns:
 
 from pprint import pprint
 from pathlib import Path
-from .bot import Bot, BotConfig
-from .utils import load_toml, load_json
-from .tools import vibrate_steering_wheel, text_to_voice
+from bot import Bot, BotConfig
+from utils import load_toml, load_json
+from tools import vibrate_steering_wheel, text_to_voice
 
 
 class DriverAssistanceBot(Bot):
     """Driver drowsiness detection bot"""
 
-    # In your __init__ method, define the tool mapping
+    # In your __init__ method, define the tool mapping<<<<
     def __init__(self, config: BotConfig):
         super().__init__(config)
         # Define your tools and create a mapping
@@ -24,7 +24,7 @@ class DriverAssistanceBot(Bot):
         self.model = self.model.with_structured_output(self.schema)
 
     # In your invoke method, use the mapping to get the tool and then invoke it
-    def invoke(self, input_data: Bot.Input) -> Bot.OutputWithoutActions:
+    async def invoke(self, input_data: Bot.Input) -> Bot.OutputWithoutActions:
         formatted_messages = self.prompt.invoke({"drowsiness_metrics": input_data})
         raw_response = self.model.invoke(formatted_messages)
         output = Bot.OutputWithoutActions.model_validate(raw_response)
