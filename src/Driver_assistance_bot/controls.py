@@ -2,12 +2,13 @@
 text-to-speech functionality using pyttsx3."""
 
 import os
+import logging
 import time
 import threading
 from threading import Lock
 import pyttsx3
-import logging
-import asyncio
+
+logging.basicConfig(level=logging.INFO)
 
 
 class VoiceControl:

@@ -1,11 +1,18 @@
+"""This module contians the driver alert agent developed with langgraph framework."""
+
+import sys
+from pathlib import Path
+from typing import TypedDict, Annotated, List
+import operator
+from pprint import pprint
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, END, START
 from langchain_ollama import ChatOllama
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
-from typing import TypedDict, Annotated, List
-import operator
-from tools import voice_alert, vibrate_steering_wheel
-from pprint import pprint
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+
+
+sys.path.append(str(Path(__file__).parent.parent.resolve()))
+from src.Driver_assistance_bot.tools import voice_alert, vibrate_steering_wheel
 
 
 # Define the state for our graph
@@ -19,6 +26,13 @@ model_with_tools = model.bind_tools([vibrate_steering_wheel, voice_alert])
 
 # Create the tool node
 tool_node = ToolNode([vibrate_steering_wheel, voice_alert])
+
+
+def output_model(state: AgentState):
+    # Optional: log for debugging
+    for m in state["messages"]:
+        print(type(m).__name__, "->", getattr(m, "content", ""))
+    return {"messages": []}  # return a valid update
 
 
 def call_model(state: AgentState):
@@ -36,10 +50,19 @@ def should_continue(state: AgentState):
     return "end"
 
 
+def finalize(_state: AgentState):
+    import time
+
+    # time.sleep(3)  # uncomment if your voice needs a tiny delay
+    return {"messages": []}
+
+
 # Define the graph
 builder = StateGraph(AgentState)
 builder.add_node("call_model", call_model)
 builder.add_node("tools", tool_node)
+builder.add_node("finalize", finalize)
+builder.add_node("output_model", output_model)
 
 builder.add_edge(START, "call_model")
 
@@ -47,7 +70,10 @@ builder.add_conditional_edges(
     "call_model", should_continue, {"tools": "tools", "end": END}
 )
 builder.add_edge("tools", "call_model")
-# builder.add_edge("tools", END)
+# there is a problem with this graph setup. the model generates tool call but does not execute the tools fully. The execution stops if the model call is not invoked after generating the tool calls.
+
+# builder.add_edge("output_model", "finalize")
+# builder.add_edge("finalize", END)
 
 # Compile the graph
 graph = builder.compile()

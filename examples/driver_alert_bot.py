@@ -1,8 +1,13 @@
-import asyncio
+"""This module has an example implementation of a driver alert bot."""
+
+import sys
 from pathlib import Path
-from utils import load_toml, load_json
-from tools import vibrate_steering_wheel, text_to_voice
-from bot import Bot, BaseBot
+
+sys.path.append(str(Path(__file__).parent.parent.resolve()))
+
+from src.Driver_assistance_bot.utils import load_toml, load_json
+from src.Driver_assistance_bot.tools import vibrate_steering_wheel, voice_alert
+from src.Driver_assistance_bot.bot import Bot, BaseBot
 
 
 # Create bot instance at module load
@@ -12,14 +17,14 @@ schema_file = Path("src") / "Driver_assistance_bot" / "configs" / "schema.json"
 prompt_cfg = load_toml(prompt_file)
 schema_cfg = load_json(schema_file)  # Uncomment if schema mode is needed
 
-MODEL_ID = "llama3.1:8b"  # or "phi3:mini"
+MODEL_ID = "llama3.1:8b"
 
 config = Bot.BotConfig(
     model_id=MODEL_ID,
-    system_prompt=prompt_cfg["bot_prompt"]["SYSTEM"],
-    user_prompt=prompt_cfg["bot_prompt"]["USER"],
-    schema=schema_cfg,  # or schema_cfg if structured mode
-    tools=[text_to_voice, vibrate_steering_wheel],
+    system_prompt=prompt_cfg["SYSTEM"],
+    user_prompt=prompt_cfg["USER"],
+    output_schema=schema_cfg,  # or schema_cfg if structured mode
+    tools=[voice_alert, vibrate_steering_wheel],
     temperature=0.1,
 )
 
@@ -37,9 +42,9 @@ def main(telemetry: dict):
 
 
 if __name__ == "__main__":
-    # Example telemetry
+    # Example telemetry input
     sample_input = {
-        "perclos": 0.6,
+        "perclos": 0.8,
         "blink_rate": 12,
         "yawn_freq": 5,
         "sdlp": 0.8,
@@ -47,4 +52,6 @@ if __name__ == "__main__":
         "steering_reversal_rate": 10,
     }
     response_ = main(sample_input)
-    print(response_)
+    print("drowsiness_level:", response_.drowsiness_level)
+    print("reasoning:", response_.reasoning)
+    print("tool_calls:", response_.tool_calls)
